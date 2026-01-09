@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchSnakes, Snake } from "@/services/api";
-import { snakeSpecies } from "@/data/snakeSpecies";
 import { Search, AlertTriangle, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -26,20 +25,15 @@ const Glossary = () => {
   const [search, setSearch] = useState("");
   const [snakes, setSnakes] = useState<Snake[]>([]);
   const [loading, setLoading] = useState(true);
-  const [useLocalData, setUseLocalData] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const loadSnakes = async () => {
       try {
         const data = await fetchSnakes();
-        if (data.length > 0) {
-          setSnakes(data);
-        } else {
-          setUseLocalData(true);
-        }
-      } catch {
-        setUseLocalData(true);
+        setSnakes(data);
+      } catch (error) {
+        console.error("Failed to fetch snakes:", error);
       } finally {
         setLoading(false);
       }
@@ -47,27 +41,17 @@ const Glossary = () => {
     loadSnakes();
   }, []);
 
-  // Convert local data format if using fallback
-  const displayData = useLocalData 
-    ? snakeSpecies.map((s, i) => ({
-        id: i + 1,
-        common_name: s.commonName,
-        species_name: s.scientificName,
-        venomous: 'Non-venomous' as const,
-        status: 'Least concern',
-        distribution: '',
-        habitat: s.habitat,
-        description: s.description,
-        ecological_role: '',
-        image_url: s.imageUrl,
-        created_at: new Date().toISOString()
-      }))
-    : snakes;
-
-  const filteredSpecies = displayData.filter(s =>
+  const filteredSpecies = snakes.filter(s =>
     s.common_name.toLowerCase().includes(search.toLowerCase()) ||
     s.species_name.toLowerCase().includes(search.toLowerCase())
   );
+
+  // Helper to get image URL - uses id-based naming convention
+  const getImageUrl = (snake: Snake) => {
+    if (snake.image_url) return snake.image_url;
+    // Fallback: images folder with id-based naming (e.g., images/1.jpg)
+    return null;
+  };
 
   const getVenomBadge = (venomous: string) => {
     if (venomous.includes("Highly")) {
@@ -124,9 +108,9 @@ const Glossary = () => {
               >
                 <CardContent className="p-4">
                   <div className="w-full h-32 bg-muted rounded-md mb-3 flex items-center justify-center overflow-hidden">
-                    {species.image_url ? (
+                    {getImageUrl(species) ? (
                       <img
-                        src={species.image_url}
+                        src={getImageUrl(species)!}
                         alt={species.common_name}
                         className="w-full h-full object-cover"
                         loading="lazy"
