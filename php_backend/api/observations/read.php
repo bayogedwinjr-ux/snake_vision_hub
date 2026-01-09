@@ -4,10 +4,8 @@
  * Endpoint: GET /api/observations/read.php
  */
 
-// Headers
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: GET");
+// Include CORS handler
+include_once '../cors.php';
 
 // Include database
 include_once '../../config/database.php';
