@@ -1,0 +1,22 @@
+# Snake Vision Hub - Python Backend Dependencies
+# Install with: pip install -r requirements.txt
+
+# Web Framework
+flask==3.0.0
+flask-cors==4.0.0
+
+# ML Inference
+onnxruntime==1.16.3
+numpy>=1.24.0,<2.0.0
+
+# Image Processing
+Pillow>=10.0.0
+
+# Camera Support (for Raspberry Pi)
+opencv-python>=4.8.0
+
+# Optional: For Raspberry Pi Camera
+# picamera2>=0.3.12  # Uncomment if using Pi Camera Module
+
+# Development
+python-dotenv>=1.0.0
