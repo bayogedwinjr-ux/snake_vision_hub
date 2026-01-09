@@ -1,25 +1,21 @@
 <?php
 /**
- * PUT - Update snake
+ * PUT - Update snake (Admin only)
  * Endpoint: PUT /api/snakes/update.php
  */
 
-// Headers
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: PUT, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+// Include CORS handler
+include_once '../cors.php';
 
-// Handle preflight OPTIONS request
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
+// Include auth middleware
+include_once '../middleware/auth.php';
 
 // Include database
 include_once '../../config/database.php';
 
 try {
+    // Require admin authentication
+    $user = requireAuth('admin');
     // Get posted data
     $data = json_decode(file_get_contents("php://input"));
     
