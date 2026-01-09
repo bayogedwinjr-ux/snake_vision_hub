@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,14 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { fetchSnakes, fetchObservations, createObservation, deleteObservation as deleteObs, Snake, Observation } from "@/services/api";
 import { snakeSpecies } from "@/data/snakeSpecies";
-import { Observation } from "@/types/observation";
-import { getObservations, saveObservation, deleteObservation } from "@/utils/observationStorage";
-import { Trash2, Image } from "lucide-react";
+import { Trash2, Image, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 const Encode = () => {
   const [observations, setObservations] = useState<Observation[]>([]);
+  const [snakes, setSnakes] = useState<Snake[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     species: "",
     length: "",
@@ -25,10 +29,32 @@ const Encode = () => {
   const [picturePreview, setPicturePreview] = useState<string | null>(null);
 
   useEffect(() => {
-    setObservations(getObservations());
+    const loadData = async () => {
+      try {
+        const [snakesData, obsData] = await Promise.all([
+          fetchSnakes(),
+          fetchObservations()
+        ]);
+        
+        if (snakesData.length > 0) {
+          setSnakes(snakesData);
+        }
+        setObservations(obsData);
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Use local species data as fallback
+  const speciesList = snakes.length > 0 
+    ? snakes.map(s => ({ id: s.id.toString(), name: s.common_name }))
+    : snakeSpecies.map(s => ({ id: s.id, name: s.commonName }));
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.species || !formData.length || !formData.location || !formData.dateObserved) {
@@ -36,26 +62,45 @@ const Encode = () => {
       return;
     }
 
-    const observation = saveObservation({
-      species: formData.species,
-      length: parseFloat(formData.length),
-      weight: formData.weight ? parseFloat(formData.weight) : undefined,
-      location: formData.location,
-      dateObserved: formData.dateObserved,
-      pictureUrl: picturePreview || undefined,
-      notes: formData.notes || undefined
-    });
+    setSubmitting(true);
+    try {
+      const response = await createObservation({
+        species: formData.species,
+        length_cm: parseFloat(formData.length),
+        weight_g: formData.weight ? parseFloat(formData.weight) : undefined,
+        location: formData.location,
+        date_observed: formData.dateObserved,
+        picture_url: picturePreview || undefined,
+        notes: formData.notes || undefined
+      });
 
-    setObservations([...observations, observation]);
-    setFormData({ species: "", length: "", weight: "", location: "", dateObserved: "", notes: "" });
-    setPicturePreview(null);
-    toast({ title: "Success", description: "Observation saved" });
+      if (response.success) {
+        // Refresh observations
+        const obsData = await fetchObservations();
+        setObservations(obsData);
+        setFormData({ species: "", length: "", weight: "", location: "", dateObserved: "", notes: "" });
+        setPicturePreview(null);
+        toast({ title: "Success", description: "Observation saved to database" });
+      } else {
+        toast({ title: "Error", description: response.message || "Failed to save", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Error", description: "Failed to save observation", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    deleteObservation(id);
-    setObservations(observations.filter(obs => obs.id !== id));
-    toast({ title: "Deleted", description: "Observation removed" });
+  const handleDelete = async (id: number) => {
+    try {
+      const response = await deleteObs(id);
+      if (response.success) {
+        setObservations(observations.filter(obs => obs.id !== id));
+        toast({ title: "Deleted", description: "Observation removed" });
+      }
+    } catch {
+      toast({ title: "Error", description: "Failed to delete", variant: "destructive" });
+    }
   };
 
   const handlePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,7 +113,11 @@ const Encode = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="container mx-auto px-4 py-8"
+    >
       <h2 className="text-2xl font-bold mb-6 text-foreground">Data Encoding</h2>
       
       <Card className="mb-8">
@@ -85,8 +134,8 @@ const Encode = () => {
                     <SelectValue placeholder="Select species" />
                   </SelectTrigger>
                   <SelectContent>
-                    {snakeSpecies.map(s => (
-                      <SelectItem key={s.id} value={s.commonName}>{s.commonName}</SelectItem>
+                    {speciesList.map(s => (
+                      <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -146,7 +195,9 @@ const Encode = () => {
               />
             </div>
             
-            <Button type="submit">Save Observation</Button>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</> : "Save Observation"}
+            </Button>
           </form>
         </CardContent>
       </Card>
@@ -156,7 +207,13 @@ const Encode = () => {
           <CardTitle className="text-lg">Observations</CardTitle>
         </CardHeader>
         <CardContent>
-          {observations.length === 0 ? (
+          {loading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          ) : observations.length === 0 ? (
             <p className="text-muted-foreground">No observations recorded yet.</p>
           ) : (
             <Table>
@@ -173,10 +230,10 @@ const Encode = () => {
                 {observations.map(obs => (
                   <TableRow key={obs.id}>
                     <TableCell>{obs.species}</TableCell>
-                    <TableCell>{obs.dateObserved}</TableCell>
+                    <TableCell>{obs.date_observed}</TableCell>
                     <TableCell>{obs.location}</TableCell>
                     <TableCell>
-                      {obs.pictureUrl ? <Image className="h-4 w-4 text-primary" /> : "-"}
+                      {obs.picture_url ? <Image className="h-4 w-4 text-primary" /> : "-"}
                     </TableCell>
                     <TableCell>
                       <Button variant="ghost" size="sm" onClick={() => handleDelete(obs.id)}>
@@ -190,7 +247,7 @@ const Encode = () => {
           )}
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   );
 };
 
