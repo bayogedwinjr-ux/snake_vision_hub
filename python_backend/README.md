@@ -148,11 +148,30 @@ Captures image from connected camera and returns predictions.
 
 ## Model Information
 
-- **Architecture**: MobileNetV3
-- **Format**: ONNX
-- **Input Size**: 224x224 RGB
-- **Classes**: 28 Philippine snake species
+- **Architecture**: MobileNetV3Large
+- **Format**: ONNX (converted from TensorFlow/Keras)
+- **Input Size**: 320x320 RGB
+- **Classes**: 10 Philippine snake species
 - **Weights File**: `models/best_mobilenetv3_snakes.onnx`
+- **Preprocessing**: Scale pixels to [-1, 1] (MobileNetV3 preprocess_input)
+- **Input Format**: NHWC (batch, height, width, channels)
+
+### Trained Species (10 classes)
+
+| Index | Scientific Name | Common Name | Venomous |
+|-------|----------------|-------------|----------|
+| 0 | Cerberus schneiderii | Dog-faced Water Snake | Mildly venomous |
+| 1 | Dendrelaphis pictus | Common Bronze-backed Snake | Non-venomous |
+| 2 | Gonyosoma oxycephalum | Red-tailed Rat Snake | Non-venomous |
+| 3 | Indotyphlops braminus | Brahminy Blind Snake | Non-venomous |
+| 4 | Laticauda colubrina | Yellow-lipped Sea Krait | Highly venomous |
+| 5 | Lycodon capucinus | Common Wolf Snake | Non-venomous |
+| 6 | Malayopython reticulatus | Reticulated Python | Non-venomous |
+| 7 | Ophiophagus hannah | King Cobra | Highly venomous |
+| 8 | Psammodynastes pulverulentus | Common Mock Viper | Mildly venomous |
+| 9 | Tropidolaemus subannulatus | North Philippine Temple Pit Viper | Highly venomous |
+
+**Note**: The Glossary page displays 28 species for educational purposes, but the AI model can only identify the 10 species listed above.
 
 ## Troubleshooting
 

@@ -161,15 +161,26 @@ export async function checkPythonHealth(): Promise<boolean> {
   }
 }
 
-// Mock predictions fallback
+// Mock predictions fallback (10 trained species)
 function getMockPredictions(): PredictionResult[] {
-  const species = [
+  const trainedSpecies = [
     { name: "King Cobra", scientific: "Ophiophagus hannah", venomous: "Highly venomous" },
     { name: "Common Wolf Snake", scientific: "Lycodon capucinus", venomous: "Non-venomous" },
-    { name: "Asian Vine Snake", scientific: "Ahaetulla prasina preocularis", venomous: "Mildly venomous" },
+    { name: "Yellow-lipped Sea Krait", scientific: "Laticauda colubrina", venomous: "Highly venomous" },
+    { name: "Reticulated Python", scientific: "Malayopython reticulatus", venomous: "Non-venomous" },
+    { name: "Common Bronze-backed Snake", scientific: "Dendrelaphis pictus", venomous: "Non-venomous" },
+    { name: "Red-tailed Rat Snake", scientific: "Gonyosoma oxycephalum", venomous: "Non-venomous" },
+    { name: "Dog-faced Water Snake", scientific: "Cerberus schneiderii", venomous: "Mildly venomous" },
+    { name: "Brahminy Blind Snake", scientific: "Indotyphlops braminus", venomous: "Non-venomous" },
+    { name: "Common Mock Viper", scientific: "Psammodynastes pulverulentus", venomous: "Mildly venomous" },
+    { name: "North Philippine Temple Pit Viper", scientific: "Tropidolaemus subannulatus", venomous: "Highly venomous" },
   ];
   
-  return species.map((s, i) => ({
+  // Return top 3 random species from the 10 trained
+  const shuffled = [...trainedSpecies].sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, 3);
+  
+  return selected.map((s, i) => ({
     species_name: s.name,
     scientific_name: s.scientific,
     confidence: Math.max(0.95 - i * 0.25, 0.1),
