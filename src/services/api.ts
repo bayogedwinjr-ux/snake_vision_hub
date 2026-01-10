@@ -121,16 +121,34 @@ export async function deleteObservation(id: number): Promise<ApiResponse<void>> 
 
 export async function predictSnake(imageBase64: string): Promise<PredictionResult[]> {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    
     const response = await fetch(`${PYTHON_API_URL}/predict`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
       body: JSON.stringify({ image: imageBase64 }),
+      signal: controller.signal,
+      mode: 'cors',
     });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      console.error('Prediction API returned error:', response.status);
+      return getMockPredictions();
+    }
+    
     const data = await response.json();
-    return data.success ? data.predictions : [];
+    return data.success ? data.predictions : getMockPredictions();
   } catch (error) {
     console.error('Prediction API Error:', error);
-    // Return mock prediction if backend is offline
+    console.log('Note: If you see ERR_BLOCKED_BY_CLIENT, disable ad blockers for localhost');
+    console.log('Falling back to mock predictions...');
+    // Return mock prediction if backend is offline or blocked
     return getMockPredictions();
   }
 }

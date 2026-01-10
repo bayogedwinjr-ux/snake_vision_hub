@@ -42,7 +42,33 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+
+# Configure CORS properly - allow all origins and methods
+CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "Accept"],
+        "supports_credentials": False
+    }
+})
+
+# Add explicit OPTIONS handler for preflight requests
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = app.make_default_options_response()
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Accept'
+        return response
+
+@app.after_request
+def after_request(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Accept'
+    return response
 
 # Configuration
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "models", "best_mobilenetv3_snakes.onnx")
@@ -63,54 +89,64 @@ LABELS = [
     "tropidolaemus_subannulatus"
 ]
 
-# Species information mapping
+# Species information mapping with database IDs for image lookup
 SPECIES_INFO = {
     "cerberus_schneiderii": {
+        "id": 7,
         "common_name": "Dog-faced Water Snake",
         "scientific_name": "Cerberus schneiderii",
         "venomous": "Mildly venomous"
     },
     "dendrelaphis_pictus": {
+        "id": 5,
         "common_name": "Common Bronze-backed Snake",
         "scientific_name": "Dendrelaphis pictus",
         "venomous": "Non-venomous"
     },
     "gonyosoma_oxycephalum": {
+        "id": 6,
         "common_name": "Red-tailed Rat Snake",
         "scientific_name": "Gonyosoma oxycephalum",
         "venomous": "Non-venomous"
     },
     "indotyphlops_braminus": {
+        "id": 8,
         "common_name": "Brahminy Blind Snake",
         "scientific_name": "Indotyphlops braminus",
         "venomous": "Non-venomous"
     },
     "laticauda_colubrina": {
+        "id": 3,
         "common_name": "Yellow-lipped Sea Krait",
         "scientific_name": "Laticauda colubrina",
         "venomous": "Highly venomous"
     },
     "lycodon_capucinus": {
+        "id": 2,
         "common_name": "Common Wolf Snake",
         "scientific_name": "Lycodon capucinus",
         "venomous": "Non-venomous"
     },
     "malayopython_reticulatus": {
+        "id": 4,
         "common_name": "Reticulated Python",
         "scientific_name": "Malayopython reticulatus",
         "venomous": "Non-venomous"
     },
     "ophiophagus_hannah": {
+        "id": 1,
         "common_name": "King Cobra",
         "scientific_name": "Ophiophagus hannah",
         "venomous": "Highly venomous"
     },
     "psammodynastes_pulverulentus": {
+        "id": 9,
         "common_name": "Common Mock Viper",
         "scientific_name": "Psammodynastes pulverulentus",
         "venomous": "Mildly venomous"
     },
     "tropidolaemus_subannulatus": {
+        "id": 10,
         "common_name": "North Philippine Temple Pit Viper",
         "scientific_name": "Tropidolaemus subannulatus",
         "venomous": "Highly venomous"
@@ -200,7 +236,8 @@ def predict_with_model(image: Image.Image) -> list:
                     "species_name": info.get("common_name", label),
                     "scientific_name": info.get("scientific_name", label),
                     "confidence": float(probabilities[idx]),
-                    "venomous": info.get("venomous", "Unknown")
+                    "venomous": info.get("venomous", "Unknown"),
+                    "species_id": info.get("id", None)
                 })
         
         return predictions
@@ -236,7 +273,8 @@ def get_mock_predictions() -> list:
             "species_name": info.get("common_name", label),
             "scientific_name": info.get("scientific_name", label),
             "confidence": confidences[i] if i < len(confidences) else 0.1,
-            "venomous": info.get("venomous", "Unknown")
+            "venomous": info.get("venomous", "Unknown"),
+            "species_id": info.get("id", None)
         })
     
     return predictions
@@ -265,7 +303,8 @@ def get_classes():
             "label": label,
             "common_name": info.get("common_name", label),
             "scientific_name": info.get("scientific_name", label),
-            "venomous": info.get("venomous", "Unknown")
+            "venomous": info.get("venomous", "Unknown"),
+            "species_id": info.get("id", None)
         })
     return jsonify({
         "success": True,
@@ -274,7 +313,7 @@ def get_classes():
     })
 
 
-@app.route('/predict', methods=['POST'])
+@app.route('/predict', methods=['POST', 'OPTIONS'])
 def predict():
     """
     Classify snake species from uploaded image.
@@ -283,6 +322,10 @@ def predict():
     - multipart/form-data with 'image' file
     - application/json with 'image' as base64 string
     """
+    # Handle preflight
+    if request.method == 'OPTIONS':
+        return '', 204
+        
     try:
         image = None
         
@@ -325,12 +368,16 @@ def predict():
         }), 500
 
 
-@app.route('/predict/camera', methods=['POST'])
+@app.route('/predict/camera', methods=['POST', 'OPTIONS'])
 def predict_camera():
     """
     Capture image from connected camera and classify.
     Only works on Raspberry Pi with connected camera.
     """
+    # Handle preflight
+    if request.method == 'OPTIONS':
+        return '', 204
+        
     if not CV2_AVAILABLE:
         return jsonify({
             "success": False,
