@@ -27,7 +27,7 @@ interface Snake {
   image_url?: string;
 }
 
-const PHP_API_URL = import.meta.env.VITE_PHP_API_URL || 'http://localhost/snake_vision_hub/api';
+const PHP_API_URL = import.meta.env.VITE_PHP_API_URL || '/snake_vision_hub/php_backend/api';
 
 const emptySnake: Omit<Snake, 'id'> = {
   common_name: '',
