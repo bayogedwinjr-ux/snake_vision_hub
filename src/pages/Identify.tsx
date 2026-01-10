@@ -68,6 +68,22 @@ const Identify = () => {
     >
       <h2 className="text-2xl font-bold mb-6 text-foreground">Snake Identification</h2>
       
+      <Card className="mb-6 border-amber-500/50 bg-amber-500/10">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
+            <div className="text-sm text-muted-foreground">
+              <p className="font-medium text-foreground mb-1">Model Limitation</p>
+              <p>
+                The AI model can identify <strong>10 snake species</strong> only: King Cobra, Yellow-lipped Sea Krait, 
+                North Philippine Temple Pit Viper, Common Wolf Snake, Reticulated Python, Common Bronze-backed Snake, 
+                Red-tailed Rat Snake, Dog-faced Water Snake, Brahminy Blind Snake, and Common Mock Viper.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="text-lg">Upload Image</CardTitle>

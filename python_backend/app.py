@@ -7,6 +7,8 @@ This server provides endpoints for:
 - Camera capture and classification (for Raspberry Pi)
 - Health check and class listing
 
+The model is trained on 10 Philippine snake species.
+
 Run: python app.py
 """
 
@@ -44,103 +46,76 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Configuration
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "models", "best_mobilenetv3_snakes.onnx")
-INPUT_SIZE = (224, 224)  # MobileNetV3 input size
+INPUT_SIZE = (320, 320)  # MobileNetV3 training size (matches notebook)
 
-# 28 Philippine Snake Species Labels (from CSV metadata)
+# 10 trained species (alphabetical order matching training folder names)
+# This order matches the class indices from the model
 LABELS = [
-    "Asian Vine Snake",
-    "Philippine Blunt-headed Tree Snake",
-    "Dog-toothed Cat Snake",
-    "Paradise Flying Tree Snake",
-    "Common Bronze-backed Snake",
-    "Philippine Whipsnake",
-    "Grey Tailed Brown Rat Snake",
-    "Red-tailed Rat Snake",
-    "Common Wolf Snake",
-    "Smooth-scaled Mountain Rat Snake",
-    "Gervais' Worm Snake",
-    "Northern Triangle-spotted Snake",
-    "Non-banded Philippine Burrowing Snake",
-    "Negros Light-scaled Burrowing Snake",
-    "Dog-faced Water Snake",
-    "Negros Spotted Water Snake",
-    "Boie's Keelback Snake",
-    "Yellow-lipped Sea Krait",
-    "Double-barred Coral Snake",
-    "Common Mock Viper",
-    "North Philippine Temple Pit Viper",
-    "Pit Viper",
-    "Barred Coral Snake",
-    "King Cobra",
-    "Samar Cobra",
-    "Reticulated Python",
-    "Small Wart Snake",
-    "Brahminy Blind Snake"
+    "cerberus_schneiderii",
+    "dendrelaphis_pictus",
+    "gonyosoma_oxycephalum",
+    "indotyphlops_braminus",
+    "laticauda_colubrina",
+    "lycodon_capucinus",
+    "malayopython_reticulatus",
+    "ophiophagus_hannah",
+    "psammodynastes_pulverulentus",
+    "tropidolaemus_subannulatus"
 ]
 
-# Scientific names for each species
-SCIENTIFIC_NAMES = [
-    "Ahaetulla prasina preocularis",
-    "Boiga angulata",
-    "Boiga cynodon",
-    "Chrysopelea paradisi variabilis",
-    "Dendrelaphis pictus",
-    "Dryophiops philippina",
-    "Coelognathus erythrurus psephenourus",
-    "Gonyosoma oxycephalum",
-    "Lycodon capucinus",
-    "Ptyas luzonensis",
-    "Calamaria gervaisi iridescens",
-    "Cyclocorus lineatus alcalai",
-    "Oxyrhabdium modestum",
-    "Pseudorabdion oxycephalum",
-    "Cerberus schneiderii",
-    "Tropidonophis negrosensis",
-    "Rhabdophis spilogaster",
-    "Laticauda colubrina",
-    "Hemibungarus gemianulis",
-    "Psammodynastes pulverulentus",
-    "Tropidolaemus subannulatus",
-    "Trimeresurus flavomaculatus",
-    "Hemibungarus calligaster",
-    "Ophiophagus hannah",
-    "Naja Samarensis",
-    "Malayopython reticulatus",
-    "Acrochordus granulatus",
-    "Indotyphlops braminus"
-]
-
-# Venom levels for each species
-VENOM_LEVELS = [
-    "Mildly venomous",
-    "Mildly venomous",
-    "Mildly venomous",
-    "Mildly venomous",
-    "Non-venomous",
-    "Mildly venomous",
-    "Non-venomous",
-    "Non-venomous",
-    "Non-venomous",
-    "Non-venomous",
-    "Non-venomous",
-    "Non-venomous",
-    "Non-venomous",
-    "Non-venomous",
-    "Mildly venomous",
-    "Non-venomous",
-    "Mildly venomous",
-    "Highly venomous",
-    "Highly venomous",
-    "Mildly venomous",
-    "Highly venomous",
-    "Highly venomous",
-    "Highly venomous",
-    "Highly venomous",
-    "Highly venomous",
-    "Non-venomous",
-    "Non-venomous",
-    "Non-venomous"
-]
+# Species information mapping
+SPECIES_INFO = {
+    "cerberus_schneiderii": {
+        "common_name": "Dog-faced Water Snake",
+        "scientific_name": "Cerberus schneiderii",
+        "venomous": "Mildly venomous"
+    },
+    "dendrelaphis_pictus": {
+        "common_name": "Common Bronze-backed Snake",
+        "scientific_name": "Dendrelaphis pictus",
+        "venomous": "Non-venomous"
+    },
+    "gonyosoma_oxycephalum": {
+        "common_name": "Red-tailed Rat Snake",
+        "scientific_name": "Gonyosoma oxycephalum",
+        "venomous": "Non-venomous"
+    },
+    "indotyphlops_braminus": {
+        "common_name": "Brahminy Blind Snake",
+        "scientific_name": "Indotyphlops braminus",
+        "venomous": "Non-venomous"
+    },
+    "laticauda_colubrina": {
+        "common_name": "Yellow-lipped Sea Krait",
+        "scientific_name": "Laticauda colubrina",
+        "venomous": "Highly venomous"
+    },
+    "lycodon_capucinus": {
+        "common_name": "Common Wolf Snake",
+        "scientific_name": "Lycodon capucinus",
+        "venomous": "Non-venomous"
+    },
+    "malayopython_reticulatus": {
+        "common_name": "Reticulated Python",
+        "scientific_name": "Malayopython reticulatus",
+        "venomous": "Non-venomous"
+    },
+    "ophiophagus_hannah": {
+        "common_name": "King Cobra",
+        "scientific_name": "Ophiophagus hannah",
+        "venomous": "Highly venomous"
+    },
+    "psammodynastes_pulverulentus": {
+        "common_name": "Common Mock Viper",
+        "scientific_name": "Psammodynastes pulverulentus",
+        "venomous": "Mildly venomous"
+    },
+    "tropidolaemus_subannulatus": {
+        "common_name": "North Philippine Temple Pit Viper",
+        "scientific_name": "Tropidolaemus subannulatus",
+        "venomous": "Highly venomous"
+    }
+}
 
 # Load ONNX model
 onnx_session = None
@@ -155,33 +130,30 @@ if ONNX_AVAILABLE and os.path.exists(MODEL_PATH):
 def preprocess_image(image: Image.Image) -> np.ndarray:
     """
     Preprocess image for MobileNetV3 model input.
+    Matches the preprocessing used during training.
     
     Args:
         image: PIL Image object
         
     Returns:
         Preprocessed numpy array ready for model inference
+        Shape: (1, 320, 320, 3) - NHWC format
     """
     # Convert to RGB if necessary
     if image.mode != 'RGB':
         image = image.convert('RGB')
     
-    # Resize to model input size
+    # Resize to model input size (320x320)
     image = image.resize(INPUT_SIZE, Image.Resampling.LANCZOS)
     
-    # Convert to numpy array and normalize
+    # Convert to numpy array
     img_array = np.array(image, dtype=np.float32)
     
-    # Normalize to [0, 1]
-    img_array = img_array / 255.0
+    # MobileNetV3 preprocessing: scale to [-1, 1]
+    # This matches tf.keras.applications.mobilenet_v3.preprocess_input
+    img_array = (img_array / 127.5) - 1.0
     
-    # ImageNet normalization (MobileNetV3 standard)
-    mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
-    std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
-    img_array = (img_array - mean) / std
-    
-    # Add batch dimension and transpose to NCHW format
-    img_array = np.transpose(img_array, (2, 0, 1))
+    # Add batch dimension (NHWC format for TensorFlow ONNX model)
     img_array = np.expand_dims(img_array, axis=0)
     
     return img_array
@@ -215,17 +187,20 @@ def predict_with_model(image: Image.Image) -> list:
         logits = outputs[0][0]
         probabilities = softmax(logits)
         
-        # Get top 5 predictions
-        top_indices = np.argsort(probabilities)[::-1][:5]
+        # Get top 5 predictions (or less if fewer classes)
+        num_predictions = min(5, len(LABELS))
+        top_indices = np.argsort(probabilities)[::-1][:num_predictions]
         
         predictions = []
         for idx in top_indices:
             if idx < len(LABELS):
+                label = LABELS[idx]
+                info = SPECIES_INFO.get(label, {})
                 predictions.append({
-                    "species_name": LABELS[idx],
-                    "scientific_name": SCIENTIFIC_NAMES[idx],
+                    "species_name": info.get("common_name", label),
+                    "scientific_name": info.get("scientific_name", label),
                     "confidence": float(probabilities[idx]),
-                    "venomous": VENOM_LEVELS[idx]
+                    "venomous": info.get("venomous", "Unknown")
                 })
         
         return predictions
@@ -245,21 +220,23 @@ def get_mock_predictions() -> list:
     """Return mock predictions for testing when model is not available."""
     import random
     
-    # Select random species
-    indices = random.sample(range(len(LABELS)), 3)
+    # Select random species from the 10 trained species
+    indices = random.sample(range(len(LABELS)), min(3, len(LABELS)))
     
-    # Generate random confidences that sum to ~1
+    # Generate random confidences
     confidences = [random.uniform(0.5, 0.95)]
     confidences.append(random.uniform(0.1, 0.3))
     confidences.append(random.uniform(0.05, 0.15))
     
     predictions = []
     for i, idx in enumerate(indices):
+        label = LABELS[idx]
+        info = SPECIES_INFO.get(label, {})
         predictions.append({
-            "species_name": LABELS[idx],
-            "scientific_name": SCIENTIFIC_NAMES[idx],
-            "confidence": confidences[i],
-            "venomous": VENOM_LEVELS[idx]
+            "species_name": info.get("common_name", label),
+            "scientific_name": info.get("scientific_name", label),
+            "confidence": confidences[i] if i < len(confidences) else 0.1,
+            "venomous": info.get("venomous", "Unknown")
         })
     
     return predictions
@@ -272,20 +249,23 @@ def health_check():
         "status": "healthy",
         "model_loaded": onnx_session is not None,
         "camera_available": CV2_AVAILABLE,
-        "num_classes": len(LABELS)
+        "num_classes": len(LABELS),
+        "input_size": INPUT_SIZE
     })
 
 
 @app.route('/classes', methods=['GET'])
 def get_classes():
-    """Return list of all classifiable snake species."""
+    """Return list of all classifiable snake species (10 trained species)."""
     classes = []
-    for i in range(len(LABELS)):
+    for i, label in enumerate(LABELS):
+        info = SPECIES_INFO.get(label, {})
         classes.append({
             "id": i,
-            "common_name": LABELS[i],
-            "scientific_name": SCIENTIFIC_NAMES[i],
-            "venomous": VENOM_LEVELS[i]
+            "label": label,
+            "common_name": info.get("common_name", label),
+            "scientific_name": info.get("scientific_name", label),
+            "venomous": info.get("venomous", "Unknown")
         })
     return jsonify({
         "success": True,
@@ -411,5 +391,6 @@ if __name__ == '__main__':
     logger.info(f"Model loaded: {onnx_session is not None}")
     logger.info(f"Camera available: {CV2_AVAILABLE}")
     logger.info(f"Number of classes: {len(LABELS)}")
+    logger.info(f"Input size: {INPUT_SIZE}")
     
     app.run(host='0.0.0.0', port=port, debug=debug)

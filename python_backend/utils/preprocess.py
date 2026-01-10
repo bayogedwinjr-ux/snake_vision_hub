@@ -1,5 +1,6 @@
 """
 Image preprocessing utilities for snake classification model.
+Matches the preprocessing used during MobileNetV3 training.
 """
 
 import numpy as np
@@ -7,14 +8,13 @@ from PIL import Image
 from typing import Tuple
 
 
-# ImageNet normalization values (used by MobileNetV3)
-IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
-IMAGENET_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+# Model input size (matches training configuration)
+INPUT_SIZE = (320, 320)
 
 
-def resize_image(image: Image.Image, target_size: Tuple[int, int] = (224, 224)) -> Image.Image:
+def resize_image(image: Image.Image, target_size: Tuple[int, int] = INPUT_SIZE) -> Image.Image:
     """
-    Resize image to target size while maintaining aspect ratio with center crop.
+    Resize image to target size.
     
     Args:
         image: PIL Image object
@@ -23,54 +23,19 @@ def resize_image(image: Image.Image, target_size: Tuple[int, int] = (224, 224)) 
     Returns:
         Resized PIL Image
     """
-    # Get current size
-    width, height = image.size
-    target_w, target_h = target_size
-    
-    # Calculate aspect ratios
-    aspect = width / height
-    target_aspect = target_w / target_h
-    
-    if aspect > target_aspect:
-        # Image is wider than target
-        new_height = target_h
-        new_width = int(target_h * aspect)
-    else:
-        # Image is taller than target
-        new_width = target_w
-        new_height = int(target_w / aspect)
-    
-    # Resize
-    image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
-    
-    # Center crop
-    left = (new_width - target_w) // 2
-    top = (new_height - target_h) // 2
-    right = left + target_w
-    bottom = top + target_h
-    
-    return image.crop((left, top, right, bottom))
-
-
-def normalize_image(img_array: np.ndarray) -> np.ndarray:
-    """
-    Normalize image array using ImageNet mean and std.
-    
-    Args:
-        img_array: Numpy array of shape (H, W, C) with values in [0, 1]
-        
-    Returns:
-        Normalized numpy array
-    """
-    return (img_array - IMAGENET_MEAN) / IMAGENET_STD
+    return image.resize(target_size, Image.Resampling.LANCZOS)
 
 
 def preprocess_for_mobilenet(
     image: Image.Image,
-    input_size: Tuple[int, int] = (224, 224)
+    input_size: Tuple[int, int] = INPUT_SIZE
 ) -> np.ndarray:
     """
     Complete preprocessing pipeline for MobileNetV3.
+    Matches the preprocessing used during training:
+    - Resize to 320x320
+    - Scale pixels to [-1, 1] range (MobileNetV3 preprocess_input)
+    - Output in NHWC format (batch, height, width, channels)
     
     Args:
         image: PIL Image object
@@ -78,26 +43,23 @@ def preprocess_for_mobilenet(
         
     Returns:
         Preprocessed numpy array ready for inference
-        Shape: (1, 3, H, W) - NCHW format
+        Shape: (1, H, W, 3) - NHWC format for TensorFlow ONNX model
     """
     # Convert to RGB
     if image.mode != 'RGB':
         image = image.convert('RGB')
     
-    # Resize with center crop
-    image = resize_image(image, input_size)
+    # Resize to model input size
+    image = image.resize(input_size, Image.Resampling.LANCZOS)
     
     # Convert to numpy array
     img_array = np.array(image, dtype=np.float32)
     
-    # Normalize to [0, 1]
-    img_array = img_array / 255.0
+    # MobileNetV3 preprocessing: scale to [-1, 1]
+    # This matches tf.keras.applications.mobilenet_v3.preprocess_input
+    img_array = (img_array / 127.5) - 1.0
     
-    # Apply ImageNet normalization
-    img_array = normalize_image(img_array)
-    
-    # Convert to NCHW format (batch, channels, height, width)
-    img_array = np.transpose(img_array, (2, 0, 1))
+    # Add batch dimension (NHWC format for TensorFlow ONNX)
     img_array = np.expand_dims(img_array, axis=0)
     
     return img_array
@@ -117,8 +79,11 @@ def decode_predictions(
         top_k: Number of top predictions to return
         
     Returns:
-        List of (label, probability) tuples
+        List of prediction dictionaries
     """
+    # Ensure we don't request more predictions than available classes
+    top_k = min(top_k, len(labels), len(probabilities))
+    
     # Get top k indices
     top_indices = np.argsort(probabilities)[::-1][:top_k]
     

@@ -9,12 +9,12 @@ from pathlib import Path
 BASE_DIR = Path(__file__).parent
 
 # Model configuration
+# Updated to match training configuration from notebook
 MODEL_CONFIG = {
     "path": BASE_DIR / "models" / "best_mobilenetv3_snakes.onnx",
-    "input_size": (224, 224),
-    "num_classes": 28,
-    "normalize_mean": [0.485, 0.456, 0.406],
-    "normalize_std": [0.229, 0.224, 0.225],
+    "input_size": (320, 320),  # Matches training size
+    "num_classes": 10,          # 10 trained species
+    "normalize_mode": "mobilenet_v3",  # Scale to [-1, 1]
 }
 
 # Server configuration
