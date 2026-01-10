@@ -4,7 +4,7 @@
  */
 
 // Configure backend URLs - change these for your local setup
-const PHP_API_URL = import.meta.env.VITE_PHP_API_URL || 'http://localhost/snake_vision_hub/api';
+const PHP_API_URL = import.meta.env.VITE_PHP_API_URL || '/snake_vision_hub/php_backend/api';
 const PYTHON_API_URL = import.meta.env.VITE_PYTHON_API_URL || 'http://localhost:5000';
 
 // Types
