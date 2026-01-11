@@ -116,13 +116,30 @@ const Encode = () => {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="container mx-auto px-4 py-8"
+      className="min-h-screen bg-background"
     >
-      <h2 className="text-2xl font-bold mb-6 text-foreground">Data Encoding</h2>
+      {/* Header Section */}
+      <div className="bg-gradient-to-b from-secondary/10 to-transparent py-12 px-4">
+        <div className="container mx-auto max-w-4xl text-center">
+          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">
+            Field <span className="text-secondary">Observations</span>
+          </h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Record and document snake sightings to contribute to conservation research in Negros Occidental.
+          </p>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
       
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="text-lg">New Observation</CardTitle>
+      <Card className="mb-8 border-secondary/30">
+        <CardHeader className="bg-secondary/5">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-secondary/20 flex items-center justify-center">
+              <Image className="h-4 w-4 text-secondary" />
+            </div>
+            New Observation
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -247,6 +264,7 @@ const Encode = () => {
           )}
         </CardContent>
       </Card>
+      </div>
     </motion.div>
   );
 };

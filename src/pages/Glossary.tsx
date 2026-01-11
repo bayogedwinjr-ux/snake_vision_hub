@@ -67,19 +67,38 @@ const Glossary = () => {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="container mx-auto px-4 py-8"
+      className="min-h-screen bg-background"
     >
-      <h2 className="text-2xl font-bold mb-6 text-foreground">Snake Glossary</h2>
-      
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search species..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10"
-        />
+      {/* Header Section */}
+      <div className="bg-gradient-to-b from-primary/10 to-transparent py-12 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-8"
+          >
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">
+              Species Glossary
+            </h1>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Explore detailed information about 28 Philippine snake species found in Negros Occidental and surrounding regions.
+            </p>
+          </motion.div>
+          
+          <div className="relative max-w-md mx-auto">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder="Search by name or species..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-12 h-12 text-base bg-card border-border/50"
+            />
+          </div>
+        </div>
       </div>
+      
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -130,8 +149,12 @@ const Glossary = () => {
       )}
       
       {!loading && filteredSpecies.length === 0 && (
-        <p className="text-center text-muted-foreground">No species found matching your search.</p>
+        <div className="text-center py-12">
+          <span className="text-6xl mb-4 block">🔍</span>
+          <p className="text-muted-foreground">No species found matching "{search}"</p>
+        </div>
       )}
+      </div>
     </motion.div>
   );
 };

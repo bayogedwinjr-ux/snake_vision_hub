@@ -115,10 +115,13 @@ const Identify = () => {
       transition={{ duration: 0.4 }}
       className="container mx-auto px-4 py-8 max-w-4xl"
     >
+      {/* Header */}
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold mb-2 text-foreground">Snake Identification</h2>
-        <p className="text-muted-foreground">
-          Upload an image to identify Philippine snake species using AI
+        <h1 className="text-3xl sm:text-4xl font-bold mb-3 text-foreground">
+          Snake <span className="text-primary">Identification</span>
+        </h1>
+        <p className="text-muted-foreground max-w-lg mx-auto">
+          Upload an image to identify Philippine snake species using our AI-powered MobileNetV3 model
         </p>
       </div>
       
