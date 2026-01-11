@@ -54,11 +54,11 @@ const Register = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md border-border/50">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
             <CardDescription className="text-center">
-              Join Snake Vision Hub to contribute observations
+              Join SNAID to contribute field observations
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>

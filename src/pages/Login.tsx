@@ -43,11 +43,11 @@ const Login = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md border-border/50">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
             <CardDescription className="text-center">
-              Sign in to access Snake Vision Hub
+              Sign in to access SNAID
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
@@ -64,7 +64,7 @@ const Login = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@snakevision.ph"
+                  placeholder="admin@snaid.ph"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -125,7 +125,7 @@ const Login = () => {
         </Card>
         
         <p className="mt-4 text-center text-xs text-muted-foreground">
-          Default admin: admin@snakevision.ph / admin123
+          Default admin: admin@snaid.ph / admin123
         </p>
       </motion.div>
     </div>
